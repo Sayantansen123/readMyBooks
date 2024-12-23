@@ -2,6 +2,9 @@ import express from "express"
 import userRoute from "./route/user.route.js"
 import { connectDb } from "./utils/connectionDb.js"
 import cookieParser from "cookie-parser"
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const app = express()
 
@@ -15,6 +18,6 @@ app.use(cookieParser())
 app.use("/api/auth",userRoute)
 
 
-app.listen(3000,()=>[
-    console.log("server started on http://localhost:3000"),
+app.listen(4000,()=>[
+    console.log("server started on http://localhost:4000"),
 ])
