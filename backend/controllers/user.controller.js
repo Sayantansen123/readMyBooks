@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 const signup = async (req, res) => {
 
     const { name, email, username, password } = req.body;
-    const user = await User.findOne({ $or: [{ email }, { username }] });
+    const user = await User.findOne({email});
 
     if (user) {
         return res.status(400).json({ error: "User already exists" });
@@ -103,14 +103,12 @@ const verifyOtp = async (req, res) => {
     }
 };
 
-
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
-        console.log(user)
         const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
-        console.log(isPasswordCorrect)
+        
 
         if (!user || !isPasswordCorrect) return res.status(400).json({ error: "Invalid username or password" });
 
@@ -142,5 +140,47 @@ const logout = async (req, res) => {
     }
 }
 
+const resetPassword = async (req, res) => {
+    try {
+      const { password, newPassword, email } = req.body;
+  
+      // Validate input
+      if (!email || !password || !newPassword) {
+        return res.status(400).json({ error: "All fields (email, password, newPassword) are required." });
+      }
+  
+      // Find the user by email
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ error: "User does not exist." });
+      }
+  
+      console.log(`User found: ${user.email}`);
+  
+      // Compare the current password
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (!isPasswordCorrect) {
+        return res.status(400).json({ error: "Wrong old password provided." });
+      }
+  
+      // Hash the new password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+  
+      // Update the password
+      user.password = hashedPassword;
+      await user.save();
+  
+      console.log("Password updated successfully:", user.email);
+  
+      // Respond to the client
+      return res.status(200).json({ message: "Password updated successfully." });
+  
+    } catch (err) {
+      console.error("Error in resetting password:", err.message);
+      return res.status(500).json({ error: "An error occurred while resetting the password. Please try again." });
+    }
+  };
+  
 
-export { signup, verifyOtp,login,logout }
+export { signup, verifyOtp, login, logout,resetPassword }
